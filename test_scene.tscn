@@ -1,0 +1,45 @@
+[gd_scene format=3 uid="uid://dppoxhojaan"]
+
+[ext_resource type="Script" uid="uid://d0na0ftpk1lmq" path="res://GameWorld.gd" id="1_uhqqe"]
+[ext_resource type="PackedScene" uid="uid://dpv71o8o03csp" path="res://player.tscn" id="2_coq8p"]
+[ext_resource type="Script" uid="uid://hw3beh2d5wqa" path="res://input_handler.gd" id="2_ia1lp"]
+
+[sub_resource type="Environment" id="Environment_6adnx"]
+
+[node name="GameWorld" type="Node3D" unique_id=197503900 node_paths=PackedStringArray("spawn_points")]
+script = ExtResource("1_uhqqe")
+player_scene = ExtResource("2_coq8p")
+spawn_points = [NodePath("SpawnPoints/Spawn1"), NodePath("SpawnPoints/Spawn2"), NodePath("SpawnPoints/Spawn3"), NodePath("SpawnPoints/Spawn4")]
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=417718672]
+transform = Transform3D(1, 0, 0, 0, -0.0008726556, 0.99999964, 0, -0.99999964, -0.0008726556, 0, 22.570595, 0)
+
+[node name="Players" type="Node3D" parent="." unique_id=2095076993]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1681307139]
+environment = SubResource("Environment_6adnx")
+
+[node name="InputHandler" type="Node3D" parent="." unique_id=1401988465]
+script = ExtResource("2_ia1lp")
+
+[node name="SpawnPoints" type="Marker3D" parent="." unique_id=501148975]
+
+[node name="Spawn1" type="Marker3D" parent="SpawnPoints" unique_id=753775501]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.3226566, 13.850276)
+
+[node name="Spawn2" type="Marker3D" parent="SpawnPoints" unique_id=552865372]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.980688, 0, 13.850276)
+
+[node name="Spawn3" type="Marker3D" parent="SpawnPoints" unique_id=1727616424]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 27.700552)
+
+[node name="Spawn4" type="Marker3D" parent="SpawnPoints" unique_id=1162963008]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 41.550827)
+
+[node name="Ground" type="CSGBox3D" parent="." unique_id=1838108389]
+use_collision = true
+size = Vector3(100, 0.1, 100)
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=1741206392]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4123464, 0.75212383, 0)
+use_collision = true

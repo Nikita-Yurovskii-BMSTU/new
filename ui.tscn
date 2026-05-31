@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://8f35kuregerf"]
+
+[ext_resource type="Script" uid="uid://be2ue7kg2lai3" path="res://ui.gd" id="1_fyqef"]
+
+[node name="UI" type="Control" unique_id=375139818]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_fyqef")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="." unique_id=1346508814]
+layout_mode = 1
+anchors_preset = -1
+anchor_left = 0.157
+anchor_top = 0.179
+anchor_right = 0.42700002
+anchor_bottom = 0.45400003
+offset_left = 83.13599
+offset_top = 23.007996
+offset_right = 177.09598
+offset_bottom = 66.80798
+
+[node name="Host" type="Button" parent="VBoxContainer" unique_id=529759207]
+layout_mode = 2
+
+[node name="LineEdit" type="LineEdit" parent="VBoxContainer" unique_id=1150217247]
+layout_mode = 2
+
+[node name="Join" type="Button" parent="VBoxContainer" unique_id=771870370]
+layout_mode = 2
+
+[connection signal="pressed" from="VBoxContainer/Host" to="." method="_on_host_pressed"]
+[connection signal="pressed" from="VBoxContainer/Join" to="." method="_on_join_pressed"]

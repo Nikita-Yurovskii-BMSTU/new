@@ -1,0 +1,33 @@
+[gd_scene format=3 uid="uid://dppoxhojaan"]
+
+[ext_resource type="Script" uid="uid://d0na0ftpk1lmq" path="res://test_scene.gd" id="1_uhqqe"]
+[ext_resource type="Script" uid="uid://hw3beh2d5wqa" path="res://input_handler.gd" id="2_ia1lp"]
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_6adnx"]
+
+[sub_resource type="Environment" id="Environment_6adnx"]
+
+[node name="Test_world" type="Node3D" unique_id=197503900]
+script = ExtResource("1_uhqqe")
+
+[node name="StaticBody3D" type="StaticBody3D" parent="." unique_id=1953581311]
+physics_material_override = SubResource("PhysicsMaterial_6adnx")
+
+[node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=1402842880]
+size = Vector3(100, 0.1, 100)
+
+[node name="DirectionalLight3D" type="DirectionalLight3D" parent="." unique_id=417718672]
+transform = Transform3D(1, 0, 0, 0, -0.0008726556, 0.99999964, 0, -0.99999964, -0.0008726556, 0, 22.570595, 0)
+
+[node name="Players" type="Node3D" parent="." unique_id=2095076993]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1681307139]
+environment = SubResource("Environment_6adnx")
+
+[node name="InputHandler" type="Node3D" parent="." unique_id=1401988465]
+script = ExtResource("2_ia1lp")
+
+[node name="SpawnPoints" type="Marker3D" parent="." unique_id=501148975]
+
+[node name="Spawn1" type="Marker3D" parent="SpawnPoints" unique_id=753775501]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 13.850276)

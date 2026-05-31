@@ -1,0 +1,10 @@
+[gd_scene format=3 uid="uid://ccbdve15x3w51"]
+
+[ext_resource type="PackedScene" uid="uid://dppoxhojaan" path="res://test_scene.tscn" id="1_0xm2m"]
+[ext_resource type="PackedScene" uid="uid://8f35kuregerf" path="res://ui.tscn" id="2_h2yge"]
+
+[node name="Main" type="Node3D" unique_id=1412764412]
+
+[node name="Test_world" parent="." unique_id=197503900 instance=ExtResource("1_0xm2m")]
+
+[node name="UI" parent="." unique_id=375139818 instance=ExtResource("2_h2yge")]
