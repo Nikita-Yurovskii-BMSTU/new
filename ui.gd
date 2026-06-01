@@ -8,6 +8,8 @@ var game_world: Node = null
 
 
 func _ready():
+	add_to_group("UI")
+	
 	await get_tree().process_frame
 	game_world = get_tree().get_first_node_in_group("GameWorld")
 	

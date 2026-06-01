@@ -1,0 +1,69 @@
+[gd_scene format=3 uid="uid://dewo6572eenta"]
+
+[ext_resource type="Script" uid="uid://bnci3qvdv4re2" path="res://skill_ui.gd" id="1_custl"]
+
+[node name="SkillUi" type="Control" unique_id=836890656 groups=["SkillUI"]]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -2.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_custl")
+
+[node name="SkillPanel" type="Panel" parent="." unique_id=2048504278]
+layout_mode = 0
+offset_left = 288.0
+offset_top = 528.0
+offset_right = 916.0
+offset_bottom = 648.0
+
+[node name="Skill1" type="Button" parent="SkillPanel" unique_id=2092257424]
+layout_mode = 0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = 140.0
+offset_bottom = 116.0
+
+[node name="Skill2" type="Button" parent="SkillPanel" unique_id=666962257]
+layout_mode = 0
+offset_left = 150.0
+offset_top = 50.0
+offset_right = 240.0
+offset_bottom = 116.0
+
+[node name="Skill3" type="Button" parent="SkillPanel" unique_id=1676414394]
+layout_mode = 0
+offset_left = 250.0
+offset_top = 50.0
+offset_right = 340.0
+offset_bottom = 116.0
+
+[node name="Skill4" type="Button" parent="SkillPanel" unique_id=1330828323]
+layout_mode = 0
+offset_left = 350.0
+offset_top = 50.0
+offset_right = 440.0
+offset_bottom = 116.0
+
+[node name="ManaBar" type="ProgressBar" parent="." unique_id=419892939]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 550.0
+offset_right = 900.0
+offset_bottom = 560.0
+show_percentage = false
+
+[node name="TextureRect" type="TextureRect" parent="." unique_id=915621695]
+layout_mode = 0
+offset_right = 1149.0
+offset_bottom = 646.0
+
+[node name="HealthBar" type="ProgressBar" parent="." unique_id=63349678]
+layout_mode = 0
+offset_left = 300.0
+offset_top = 540.0
+offset_right = 900.0
+offset_bottom = 550.0
+show_percentage = false

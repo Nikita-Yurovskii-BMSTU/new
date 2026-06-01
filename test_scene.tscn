@@ -3,8 +3,16 @@
 [ext_resource type="Script" uid="uid://d0na0ftpk1lmq" path="res://GameWorld.gd" id="1_uhqqe"]
 [ext_resource type="PackedScene" uid="uid://dpv71o8o03csp" path="res://player.tscn" id="2_coq8p"]
 [ext_resource type="Script" uid="uid://hw3beh2d5wqa" path="res://input_handler.gd" id="2_ia1lp"]
+[ext_resource type="Texture2D" uid="uid://dj6p83f5jvmg8" path="res://green-grass-background-in-the-form-of-grass-texture-3d-rendering-photo.jpg" id="4_coq8p"]
 
 [sub_resource type="Environment" id="Environment_6adnx"]
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_sasra"]
+albedo_color = Color(9.62615e-08, 0.9540226, 0.19869342, 1)
+albedo_texture = ExtResource("4_coq8p")
+metallic = 1.0
+metallic_texture = ExtResource("4_coq8p")
+roughness = 0.79
 
 [node name="GameWorld" type="Node3D" unique_id=197503900 node_paths=PackedStringArray("spawn_points")]
 script = ExtResource("1_uhqqe")
@@ -23,22 +31,24 @@ environment = SubResource("Environment_6adnx")
 script = ExtResource("2_ia1lp")
 
 [node name="SpawnPoints" type="Marker3D" parent="." unique_id=501148975]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -100, 0)
 
 [node name="Spawn1" type="Marker3D" parent="SpawnPoints" unique_id=753775501]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 5.3226566, 13.850276)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 13.85)
 
 [node name="Spawn2" type="Marker3D" parent="SpawnPoints" unique_id=552865372]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.980688, 0, 13.850276)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -9.981, 0, 13.85)
 
 [node name="Spawn3" type="Marker3D" parent="SpawnPoints" unique_id=1727616424]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 27.700552)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 27.701)
 
 [node name="Spawn4" type="Marker3D" parent="SpawnPoints" unique_id=1162963008]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 41.550827)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 41.551)
 
 [node name="Ground" type="CSGBox3D" parent="." unique_id=1838108389]
 use_collision = true
-size = Vector3(100, 0.1, 100)
+size = Vector3(100, 0, 100)
+material = SubResource("StandardMaterial3D_sasra")
 
 [node name="CSGBox3D" type="CSGBox3D" parent="." unique_id=1741206392]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -5.4123464, 0.75212383, 0)

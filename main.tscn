@@ -2,9 +2,20 @@
 
 [ext_resource type="PackedScene" uid="uid://dppoxhojaan" path="res://test_scene.tscn" id="1_0xm2m"]
 [ext_resource type="PackedScene" uid="uid://8f35kuregerf" path="res://ui.tscn" id="2_h2yge"]
+[ext_resource type="PackedScene" uid="uid://dwedsr1kce8id" path="res://enemy.tscn" id="3_h2yge"]
+[ext_resource type="PackedScene" uid="uid://dewo6572eenta" path="res://skill_ui.tscn" id="4_1bvp3"]
 
 [node name="Main" type="Node3D" unique_id=1412764412]
 
-[node name="GameWorld" parent="." unique_id=197503900 instance=ExtResource("1_0xm2m")]
+[node name="GameWorld" parent="." unique_id=197503900 node_paths=PackedStringArray("spawn_points") instance=ExtResource("1_0xm2m")]
+spawn_points = []
+
+[node name="Enemy" parent="." unique_id=2074057946 instance=ExtResource("3_h2yge")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 3.4099808, 0.05000019, 12.36424)
+
+[node name="Enemy2" parent="." unique_id=276175244 instance=ExtResource("3_h2yge")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.291153, 0.05000019, 13.644153)
+
+[node name="SkillUi" parent="." unique_id=836890656 instance=ExtResource("4_1bvp3")]
 
 [node name="UI" parent="." unique_id=375139818 instance=ExtResource("2_h2yge")]
