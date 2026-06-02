@@ -237,37 +237,37 @@ func _physics_process(delta):
 		if velocity.y < 0:
 			velocity.y = 0
 	
+	# Движение своего игрока
 	if is_multiplayer_authority():
-		if is_shooting:
-			target_position = global_position
-			if anim_state:
-				change_animation.rpc("aim")
-				is_shooting = false
-		elif is_moving:
-			var distance = global_position.distance_to(target_position)
+		if is_moving:
+			var direction = target_position - global_position
+			direction.y = 0
+			var distance = direction.length()
 			
-			# Остановка при достижении цели
-			if distance < 2.1:
+			if distance < 0.8:
 				is_moving = false
 				velocity.x = 0
 				velocity.z = 0
 				if anim_state:
-					change_animation.rpc("Idle")
+					anim_state.travel("Idle")
 				move_and_slide()
+				sync_position.rpc(global_position, rotation.y)
 				return
 			
-			var direction = (target_position - global_position).normalized()
-			direction.y = 0
-			velocity.x = direction.x * speed
-			velocity.z = direction.z * speed
+			var move_dir = direction.normalized()
+			velocity.x = move_dir.x * speed
+			velocity.z = move_dir.z * speed
 			
-			# Анимация бега
+			# Плавный поворот (только если скорость достаточно большая)
+			if velocity.length() > 0.5:
+				var target_rot = atan2(move_dir.x, move_dir.z)
+				rotation.y = rotate_toward(rotation.y, target_rot, 5.0 * delta)
+			
 			if anim_state:
-				change_animation.rpc("Run")
+				anim_state.travel("Run")
 		else:
-			# Анимация покоя
 			if anim_state:
-				change_animation.rpc("Idle")
+				anim_state.travel("Idle")
 			velocity.x = 0
 			velocity.z = 0
 		
@@ -275,6 +275,19 @@ func _physics_process(delta):
 		sync_position.rpc(global_position, rotation.y)
 	else:
 		move_and_slide()
+
+
+func rotate_toward(from: float, to: float, step: float) -> float:
+	var diff = fmod(to - from, PI * 2)
+	if diff > PI:
+		diff -= PI * 2
+	elif diff < -PI:
+		diff += PI * 2
+	
+	if diff > 0:
+		return from + min(step, diff)
+	else:
+		return from - min(step, -diff)
 
 
 
@@ -288,6 +301,7 @@ func sync_position(new_pos: Vector3, new_rot: float):
 		return
 	global_position = new_pos
 	rotation.y = new_rot
+	
 
 
 func _process(delta):

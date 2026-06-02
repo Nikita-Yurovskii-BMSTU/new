@@ -11,6 +11,8 @@ var can_attack: bool = true
 
 
 func _ready():
+	add_to_group("Enemy")  # ← ДОБАВЛЕНО
+	
 	current_health = max_health
 	
 	# Визуал
@@ -81,11 +83,10 @@ func take_damage(amount: int):
 	current_health -= amount
 	update_health_bar()
 	update_enemy_health.rpc(current_health)
+	print("Враг получил урон! HP: ", current_health)
 	
 	if current_health <= 0:
 		die()
-
-
 
 
 @rpc("any_peer", "call_local", "reliable")
@@ -156,6 +157,7 @@ func attack():
 	
 	await get_tree().create_timer(attack_cooldown).timeout
 	can_attack = true
-	
+
+
 func is_enemy() -> bool:
 	return true

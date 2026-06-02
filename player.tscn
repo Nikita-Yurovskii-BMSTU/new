@@ -25,4 +25,4 @@ mesh = SubResource("CapsuleMesh_4flbx")
 script = ExtResource("3_i3pqv")
 
 [node name="body" parent="." unique_id=2032950859 instance=ExtResource("4_hqtel")]
-transform = Transform3D(-2, 0, 1.7484555e-07, 0, 2, 0, -1.7484555e-07, 0, -2, 0, -1.6917188, 0.09272647)
+transform = Transform3D(-2, 0, -1.7484555e-07, 0, 2, 0, 1.7484555e-07, 0, -2, 0, -1.6917188, 0.09272647)

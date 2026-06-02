@@ -6,9 +6,8 @@ extends Area3D
 
 var direction: Vector3 = Vector3.FORWARD
 var owner_id: int = 0
-var can_hit: bool = false
-var is_targeted: bool = false  # Добавлено
-var target_position: Vector3 = Vector3.ZERO  # Добавлено
+var is_targeted: bool = false
+var target_position: Vector3 = Vector3.ZERO
 
 
 func _ready():
@@ -29,16 +28,13 @@ func _ready():
 	
 	body_entered.connect(_on_body_entered)
 	
+	# Жизнь пули
 	await get_tree().create_timer(lifetime).timeout
 	queue_free()
-	
-	await get_tree().create_timer(0.1).timeout
-	can_hit = true  # Исправлено true на True
 
 
 func _physics_process(delta):
 	if is_targeted and target_position != Vector3.ZERO:
-		# Если это таргетированная пуля - летим точно в цель
 		var target_dir = (target_position - global_position).normalized()
 		direction = target_dir
 	
@@ -46,16 +42,34 @@ func _physics_process(delta):
 
 
 func _on_body_entered(body):
-	if not can_hit:
-		return
-		
-	#if body.is_in_group("enemy"):
-	#	body.take_damage(20)
+	print("Пуля попала в: ", body.name)
 	
-	# Не попадаем в того, кто стрелял
-	if body == self or (body.has_method("my_id") and body.my_id == owner_id):
+	# Игнорируем всех игроков (по группе)
+	if body.is_in_group("Player"):
+		print("Это игрок, пропускаем")
 		return
 	
-	if body.has_method("take_damage"):
-		body.take_damage(damage)
-		queue_free()
+	var parent = body.get_parent()
+	if parent and parent.is_in_group("Player"):
+		print("Это игрок (родитель), пропускаем")
+		return
+	
+	# Ищем врага
+	var enemy = body
+	while enemy and not enemy.has_method("take_damage"):
+		enemy = enemy.get_parent()
+		if enemy:
+			print("Проверяем родителя: ", enemy.name)
+	
+	if not enemy:
+		if body.is_in_group("Enemy"):
+			enemy = body
+		elif body.get_parent() and body.get_parent().is_in_group("Enemy"):
+			enemy = body.get_parent()
+		else:
+			print("Не удалось найти врага")
+			return
+	
+	print("Попали во врага: ", enemy.name)
+	enemy.take_damage(damage)
+	queue_free()
