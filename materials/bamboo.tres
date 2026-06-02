@@ -1,0 +1,7 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://c0t8qwcme5dji"]
+
+[ext_resource type="Texture2D" uid="uid://e1jslxq5tdy3" path="res://Stylish plants/bamboo/diffuse.tga" id="1_01hmd"]
+
+[resource]
+albedo_texture = ExtResource("1_01hmd")
+roughness = 0.8

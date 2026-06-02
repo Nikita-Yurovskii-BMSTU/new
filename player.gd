@@ -1,8 +1,11 @@
 extends CharacterBody3D
 
-@export var speed: float = 5.0
-@export var camera_height: float = 15.0
-@export var camera_distance: float = 10.0
+@onready var anim_tree = $body/AnimationTree
+@onready var anim_state = anim_tree.get("parameters/playback")
+
+@export var speed: float = 10.0
+@export var camera_height: float = 10.0
+@export var camera_distance: float = 5.0
 @export var bullet_scene: PackedScene
 
 # Гравитация
@@ -16,7 +19,7 @@ var current_mana: int = 100
 var max_health: int = 100
 var max_mana: int = 100
 var skills_library = null
-
+var is_shooting: bool = false
 
 func _ready():
 	await get_tree().process_frame
@@ -39,31 +42,14 @@ func _ready():
 		camera.make_current()
 		print("✅ Камера создана")
 	
-	# Визуал
-	var body = MeshInstance3D.new()
-	body.mesh = BoxMesh.new()
-	body.mesh.size = Vector3(0.8, 0.8, 0.8)
-	var material = StandardMaterial3D.new()
+	# Проверка анимаций
+	if anim_tree:
+		print("AnimationTree найден")
+		# Устанавливаем анимацию покоя по умолчанию
+		anim_state.travel("Idle")
 	
-	if is_multiplayer_authority():
-		material.albedo_color = Color(0.8, 0.2, 0.2)
-		print("Это МОЙ игрок - красный")
-	else:
-		material.albedo_color = Color(0.2, 0.2, 0.8)
-		print("Это ЧУЖОЙ игрок - синий")
+	# Стрелка направления (только для своего игрока)
 	
-	body.material_override = material
-	add_child(body)
-	
-	if is_multiplayer_authority():
-		var arrow = MeshInstance3D.new()
-		arrow.mesh = BoxMesh.new()
-		arrow.mesh.size = Vector3(0.4, 0.1, 0.8)
-		arrow.position = Vector3(0, 0.5, 0.4)
-		var arrow_material = StandardMaterial3D.new()
-		arrow_material.albedo_color = Color(1, 1, 0)
-		arrow.material_override = arrow_material
-		add_child(arrow)
 	
 	var health_bar = create_health_bar()
 	add_child(health_bar)
@@ -133,17 +119,14 @@ func _input(event):
 	if ui and ui.visible:
 		return
 	
-	# Только ПКМ блокирует обработку
+	# Только ПКМ - движение
 	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
 		move_to_click()
-		#get_viewport().set_input_as_handled()
 	
-	# Клавиши скиллов НЕ блокируют мышь
+	# Клавиши скиллов
 	if event is InputEventKey:
 		if event.is_action_pressed("skill_1"):
-			print("=== Нажата Q, режим мыши: ", Input.get_mouse_mode())
 			use_skill(1)
-			print("=== После use_skill, режим мыши: ", Input.get_mouse_mode())
 		if event.is_action_pressed("skill_2"):
 			use_skill(2)
 		if event.is_action_pressed("skill_3"):
@@ -161,7 +144,9 @@ func use_skill(skill_id: int):
 @rpc("any_peer", "call_local", "reliable")
 func shoot_rpc(skill_id: int, pos: Vector3, dir: Vector3, rot: float, target_pos: Vector3 = Vector3.ZERO, is_targeted: bool = false):
 	rotation.y = rot
-	
+	is_shooting = true
+	velocity.x = 0
+	velocity.z = 0
 	match skill_id:
 		1:
 			if bullet_scene:
@@ -195,7 +180,6 @@ func shoot_rpc(skill_id: int, pos: Vector3, dir: Vector3, rot: float, target_pos
 					get_tree().root.add_child(bullet)
 		
 		4:
-			# Хил или другой скилл
 			pass
 
 
@@ -246,26 +230,44 @@ func die_rpc():
 
 
 func _physics_process(delta):
-	# Применяем гравитацию всегда (для всех)
+	# Гравитация
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 	else:
 		if velocity.y < 0:
 			velocity.y = 0
 	
-	# Движение для своего игрока
 	if is_multiplayer_authority():
-		if is_moving:
+		if is_shooting:
+			target_position = global_position
+			if anim_state:
+				change_animation.rpc("aim")
+				is_shooting = false
+		elif is_moving:
+			var distance = global_position.distance_to(target_position)
+			
+			# Остановка при достижении цели
+			if distance < 2.1:
+				is_moving = false
+				velocity.x = 0
+				velocity.z = 0
+				if anim_state:
+					change_animation.rpc("Idle")
+				move_and_slide()
+				return
+			
 			var direction = (target_position - global_position).normalized()
 			direction.y = 0
 			velocity.x = direction.x * speed
 			velocity.z = direction.z * speed
 			
-			if global_position.distance_to(target_position) < 0.5:
-				velocity.x = 0
-				velocity.z = 0
-				is_moving = false
+			# Анимация бега
+			if anim_state:
+				change_animation.rpc("Run")
 		else:
+			# Анимация покоя
+			if anim_state:
+				change_animation.rpc("Idle")
 			velocity.x = 0
 			velocity.z = 0
 		
@@ -274,6 +276,11 @@ func _physics_process(delta):
 	else:
 		move_and_slide()
 
+
+
+@rpc("any_peer", "call_local", "reliable")
+func change_animation(anim):
+	anim_state.travel(anim)
 
 @rpc("any_peer", "unreliable", "call_local")
 func sync_position(new_pos: Vector3, new_rot: float):

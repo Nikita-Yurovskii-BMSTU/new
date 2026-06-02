@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://bw5nll6oh1x7a" path="res://player.gd" id="1_4flbx"]
 [ext_resource type="PackedScene" uid="uid://ytqex3xk0l0x" path="res://bullet.tscn" id="2_onrkg"]
 [ext_resource type="Script" uid="uid://1f2m21tmx677" path="res://targeting.gd" id="3_i3pqv"]
+[ext_resource type="PackedScene" uid="uid://gahllhky37xp" path="res://shaders/erika_archer_with_bow_arrow.tscn" id="4_hqtel"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_sh265"]
 
@@ -13,10 +14,15 @@ script = ExtResource("1_4flbx")
 bullet_scene = ExtResource("2_onrkg")
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1536779404]
+transform = Transform3D(2, 0, 0, 0, 2, 0, 0, 0, 2, 0, 0, 0)
 shape = SubResource("CapsuleShape3D_sh265")
 
 [node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1845535387]
+visible = false
 mesh = SubResource("CapsuleMesh_4flbx")
 
 [node name="Targeting" type="Node3D" parent="." unique_id=2074170940]
 script = ExtResource("3_i3pqv")
+
+[node name="body" parent="." unique_id=2032950859 instance=ExtResource("4_hqtel")]
+transform = Transform3D(-2, 0, 1.7484555e-07, 0, 2, 0, -1.7484555e-07, 0, -2, 0, -1.6917188, 0.09272647)

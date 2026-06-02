@@ -86,6 +86,8 @@ func take_damage(amount: int):
 		die()
 
 
+
+
 @rpc("any_peer", "call_local", "reliable")
 func update_enemy_health(new_health: int):
 	if multiplayer.is_server():

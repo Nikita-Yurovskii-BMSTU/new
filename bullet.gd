@@ -48,6 +48,9 @@ func _physics_process(delta):
 func _on_body_entered(body):
 	if not can_hit:
 		return
+		
+	#if body.is_in_group("enemy"):
+	#	body.take_damage(20)
 	
 	# Не попадаем в того, кто стрелял
 	if body == self or (body.has_method("my_id") and body.my_id == owner_id):

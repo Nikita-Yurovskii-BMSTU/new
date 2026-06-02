@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://c4i676d3xakt1"]
+
+[ext_resource type="Shader" uid="uid://cfsukguxo7i6w" path="res://shaders/grass_shader.gdshader" id="1_nmvo8"]
+[ext_resource type="Texture2D" uid="uid://e1jslxq5tdy3" path="res://Stylish plants/bamboo/diffuse.tga" id="2_6b8xp"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_nmvo8")
+shader_parameter/albedo_texture = ExtResource("2_6b8xp")
+shader_parameter/wind_speed = 1.0
+shader_parameter/wind_strength = 1.0

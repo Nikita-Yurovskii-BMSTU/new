@@ -1,0 +1,10 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bic2m3aii0r3g"]
+
+[ext_resource type="Texture2D" uid="uid://0wedxhdav7as" path="res://Stylish plants/hemp/diffuse.tga" id="1_gn5i0"]
+
+[resource]
+albedo_texture = ExtResource("1_gn5i0")
+roughness = 0.8
+texture_filter = 0
+texture_repeat = false
+billboard_keep_scale = true
