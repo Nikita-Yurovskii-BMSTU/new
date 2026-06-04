@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="SkillResource" format=3 uid="uid://skill3"]
+
+[ext_resource type="Script" uid="uid://dof1nhm42jsyf" path="res://Skills/SkillResource.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://ytqex3xk0l0x" path="res://bullet.tscn" id="1_pkh3w"]
+[ext_resource type="Texture2D" uid="uid://bifg1wwfyk4i6" path="res://icon.svg" id="2_fqnu3"]
+
+[resource]
+script = ExtResource("1")
+id = 3
+skill_name = "Конус"
+description = "Выпускает три стрелы веером"
+mana_cost = 5
+cooldown = 3.0
+skill_type = "cone"
+effect_scene = ExtResource("1_pkh3w")
+damage = 6
+speed = 30.0
+lifetime = 2.5
+icon = ExtResource("2_fqnu3")
+key_binding = "E"
+projectile_count = 3
+spread_angle = 0.6
+metadata/_custom_type_script = "uid://dof1nhm42jsyf"

@@ -1,0 +1,14 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://c2mwt8pcm2j1s"]
+
+[ext_resource type="Texture2D" uid="uid://d2r84wbdy544b" path="res://assets/Pro Longbow Pack/Erika Archer With Bow Arrow_1.png" id="1_bywth"]
+[ext_resource type="Texture2D" uid="uid://cpd7230xbaf52" path="res://assets/Pro Longbow Pack/Erika Archer With Bow Arrow_2.png" id="2_7828r"]
+
+[resource]
+resource_name = "Body_MAT1"
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.9063318, 0.9063318, 0.9063318, 0.8)
+albedo_texture = ExtResource("1_bywth")
+emission_enabled = true
+normal_enabled = true
+normal_scale = 0.0
+normal_texture = ExtResource("2_7828r")

@@ -1,0 +1,12 @@
+[gd_scene format=3 uid="uid://d0jgcsh71erbd"]
+
+[ext_resource type="ArrayMesh" uid="uid://cqd7hifyjelqm" path="res://Stylized Nature MegaKit[Standard]/gays/CommonTree_1_tree_023.res" id="1_3p6sb"]
+[ext_resource type="PackedScene" uid="uid://d3hc113mn4hj6" path="res://Stylized Nature MegaKit[Standard]/FBX/CommonTree_1.fbx" id="2_rixn7"]
+
+[node name="Tree" type="Node3D" unique_id=326927643]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1951031665]
+mesh = ExtResource("1_3p6sb")
+
+[node name="CommonTree_1" parent="." unique_id=1637018406 instance=ExtResource("2_rixn7")]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.849899, 0, 0.64746475)

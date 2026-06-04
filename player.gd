@@ -1,39 +1,96 @@
 extends CharacterBody3D
 
+# =============================================================================
+#  1. ПЕРЕМЕННЫЕ И СВОЙСТВА
+# =============================================================================
+
+# ---------------------- Узлы ----------------------
 @onready var anim_tree = $body/AnimationTree
-@onready var anim_state = anim_tree.get("parameters/playback")
+@onready var anim_manager = $AnimationManager
 
+# ---------------------- Экспорт ----------------------
 @export var speed: float = 10.0
-@export var camera_height: float = 10.0
-@export var camera_distance: float = 5.0
+@export var camera_height: float = 12.0
+@export var camera_distance: float = 8.0
 @export var bullet_scene: PackedScene
-
-# Гравитация
 @export var gravity: float = 20.0
 
+# ---------------------- Камера ----------------------
 var camera: Camera3D = null
+
+# ---------------------- Передвижение ----------------------
 var target_position: Vector3 = Vector3.ZERO
 var is_moving: bool = false
+var _last_anim: String = ""
+
+# ---------------------- Здоровье и мана ----------------------
 var current_health: int = 100
 var current_mana: int = 100
 var max_health: int = 100
 var max_mana: int = 100
+
+# ---------------------- Библиотека скиллов ----------------------
 var skills_library = null
-var is_shooting: bool = false
+
+# ---------------------- Состояние атаки ----------------------
+var is_attacking: bool = false
+var attack_target: Node3D = null
+var pending_skill_id: int = 0
+var _attack_in_progress: bool = false
+var _attack_id: int = 0
+
+# ---------------------- Кеш для RPC ----------------------
+var _saved_dir: Vector3 = Vector3.ZERO
+var _saved_target_pos: Vector3 = Vector3.ZERO
+var _saved_is_targeted: bool = false
+
+# ---------------------- Защита от спама ----------------------
+var _last_shot_time: float = 0.0
+var _min_shot_interval: float = 0.5
+
+# ---------------------- Служебные ----------------------
+var _is_authority: bool = false
+
+
+# =============================================================================
+#  2. ИНИЦИАЛИЗАЦИЯ
+# =============================================================================
 
 func _ready():
-	await get_tree().process_frame
-	await get_tree().process_frame
-	
+	call_deferred("_setup_player")
+
+
+func _setup_player():
 	print("=== ИГРОК: ", name)
-	print("is_multiplayer_authority(): ", is_multiplayer_authority())
 	
+	_is_authority = is_multiplayer_authority()
+	print("is_multiplayer_authority(): ", _is_authority)
+	
+	_setup_animations()
+	_setup_skills()
+	_setup_camera()
+	_setup_health_bar()
+	
+	add_to_group("Player")
+	update_ui()
+	set_physics_process(true)
+
+
+func _setup_animations():
+	if anim_tree and anim_manager:
+		anim_manager.setup(anim_tree)
+		anim_manager.idle()
+
+
+func _setup_skills():
 	skills_library = preload("res://Skills.gd").new()
 	skills_library.bullet_scene = bullet_scene
 	skills_library.parent_player = self
 	add_child(skills_library)
-	
-	if is_multiplayer_authority():
+
+
+func _setup_camera():
+	if _is_authority:
 		camera = Camera3D.new()
 		camera.name = "Camera3D"
 		camera.position = Vector3(0, camera_height, camera_distance)
@@ -41,28 +98,42 @@ func _ready():
 		add_child(camera)
 		camera.make_current()
 		print("✅ Камера создана")
-	
-	# Проверка анимаций
-	if anim_tree:
-		print("AnimationTree найден")
-		# Устанавливаем анимацию покоя по умолчанию
-		anim_state.travel("Idle")
-	
-	# Стрелка направления (только для своего игрока)
-	
-	
+
+
+func _setup_health_bar():
 	var health_bar = create_health_bar()
 	add_child(health_bar)
+
+
+# =============================================================================
+#  3. ЗДОРОВЬЕ И МАНА
+# =============================================================================
+
+func take_damage(amount: int):
+	if not _is_authority:
+		return
 	
-	add_to_group("Player")
+	current_health -= amount
+	update_health_bar()
 	update_ui()
-	set_physics_process(true)
+	
+	if current_health <= 0:
+		die()
 
 
-func set_target(target: Node3D):
-	if skills_library:
-		skills_library.set_target(target)
+func die():
+	rpc("die_rpc")
+	queue_free()
 
+
+func update_ui():
+	var ui = get_tree().get_first_node_in_group("SkillUI")
+	if ui and _is_authority:
+		ui.update_health(current_health, max_health)
+		ui.update_mana(current_mana, max_mana)
+
+
+# ---------------------- Health Bar (над головой) ----------------------
 
 func create_health_bar() -> Node3D:
 	var health_bar_container = Node3D.new()
@@ -104,87 +175,21 @@ func update_health_bar():
 				child.position.x = -(1.0 - percent) / 2
 
 
-func update_ui():
-	var ui = get_tree().get_first_node_in_group("SkillUI")
-	if ui and is_multiplayer_authority():
-		ui.update_health(current_health, max_health)
-		ui.update_mana(current_mana, max_mana)
+# =============================================================================
+#  4. ТАРГЕТ ДЛЯ СКИЛЛОВ
+# =============================================================================
+
+func set_target(target: Node3D):
+	if skills_library:
+		skills_library.set_target(target)
 
 
-func _input(event):
-	if not is_multiplayer_authority():
-		return
-	
-	var ui = get_tree().get_first_node_in_group("UI")
-	if ui and ui.visible:
-		return
-	
-	# Только ПКМ - движение
-	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
-		move_to_click()
-	
-	# Клавиши скиллов
-	if event is InputEventKey:
-		if event.is_action_pressed("skill_1"):
-			use_skill(1)
-		if event.is_action_pressed("skill_2"):
-			use_skill(2)
-		if event.is_action_pressed("skill_3"):
-			use_skill(3)
-		if event.is_action_pressed("skill_4"):
-			use_skill(4)
-
-
-func use_skill(skill_id: int):
-	if not skills_library:
-		return
-	skills_library.use_skill(skill_id)
-
-
-@rpc("any_peer", "call_local", "reliable")
-func shoot_rpc(skill_id: int, pos: Vector3, dir: Vector3, rot: float, target_pos: Vector3 = Vector3.ZERO, is_targeted: bool = false):
-	rotation.y = rot
-	is_shooting = true
-	velocity.x = 0
-	velocity.z = 0
-	match skill_id:
-		1:
-			if bullet_scene:
-				var bullet = bullet_scene.instantiate()
-				bullet.global_position = pos
-				bullet.direction = dir
-				bullet.is_targeted = is_targeted
-				if is_targeted and target_pos != Vector3.ZERO:
-					bullet.target_position = target_pos
-				get_tree().root.add_child(bullet)
-		
-		2:
-			if bullet_scene:
-				var bullet1 = bullet_scene.instantiate()
-				bullet1.global_position = pos
-				bullet1.direction = dir
-				get_tree().root.add_child(bullet1)
-				await get_tree().create_timer(0.1).timeout
-				var bullet2 = bullet_scene.instantiate()
-				bullet2.global_position = pos
-				bullet2.direction = dir
-				get_tree().root.add_child(bullet2)
-		
-		3:
-			if bullet_scene:
-				var dirs = [dir, dir.rotated(Vector3.UP, 0.3), dir.rotated(Vector3.UP, -0.3)]
-				for d in dirs:
-					var bullet = bullet_scene.instantiate()
-					bullet.global_position = pos
-					bullet.direction = d
-					get_tree().root.add_child(bullet)
-		
-		4:
-			pass
-
+# =============================================================================
+#  5. ПЕРЕДВИЖЕНИЕ
+# =============================================================================
 
 func move_to_click():
-	if not camera:
+	if not camera or is_attacking:
 		return
 	
 	var mouse_pos = get_viewport().get_mouse_position()
@@ -204,107 +209,351 @@ func move_to_click():
 			look_at(global_position + dir, Vector3.UP)
 
 
-func take_damage(amount: int):
-	if not is_multiplayer_authority():
-		return
-	
-	current_health -= amount
-	update_health_bar()
-	update_ui()
-	print("❤️ HP: ", current_health, "/", max_health)
-	
-	if current_health <= 0:
-		die()
-
-
-func die():
-	rpc("die_rpc")
-	queue_free()
-
-
-@rpc("any_peer", "call_local", "reliable")
-func die_rpc():
-	if is_multiplayer_authority():
-		return
-	queue_free()
-
-
 func _physics_process(delta):
-	# Гравитация
+	_apply_gravity(delta)
+	
+	if _is_authority:
+		_physics_authority()
+	else:
+		move_and_slide()
+
+
+func _apply_gravity(delta):
 	if not is_on_floor():
 		velocity.y -= gravity * delta
 	else:
 		if velocity.y < 0:
 			velocity.y = 0
-	
-	# Движение своего игрока
-	if is_multiplayer_authority():
-		if is_moving:
-			var direction = target_position - global_position
-			direction.y = 0
-			var distance = direction.length()
-			
-			if distance < 0.8:
-				is_moving = false
-				velocity.x = 0
-				velocity.z = 0
-				if anim_state:
-					anim_state.travel("Idle")
-				move_and_slide()
-				sync_position.rpc(global_position, rotation.y)
-				return
-			
-			var move_dir = direction.normalized()
-			velocity.x = move_dir.x * speed
-			velocity.z = move_dir.z * speed
-			
-			# Плавный поворот (только если скорость достаточно большая)
-			if velocity.length() > 0.5:
-				var target_rot = atan2(move_dir.x, move_dir.z)
-				rotation.y = rotate_toward(rotation.y, target_rot, 5.0 * delta)
-			
-			if anim_state:
-				anim_state.travel("Run")
-		else:
-			if anim_state:
-				anim_state.travel("Idle")
-			velocity.x = 0
-			velocity.z = 0
-		
+
+
+func _physics_authority():
+	# Атакуем — стоим на месте
+	if is_attacking:
+		velocity.x = 0
+		velocity.z = 0
 		move_and_slide()
 		sync_position.rpc(global_position, rotation.y)
-	else:
-		move_and_slide()
-
-
-func rotate_toward(from: float, to: float, step: float) -> float:
-	var diff = fmod(to - from, PI * 2)
-	if diff > PI:
-		diff -= PI * 2
-	elif diff < -PI:
-		diff += PI * 2
+		return
 	
-	if diff > 0:
-		return from + min(step, diff)
+	# Двигаемся к цели
+	if is_moving:
+		var direction = target_position - global_position
+		direction.y = 0
+		var distance = direction.length()
+		
+		# Пришли
+		if distance < 0.8:
+			is_moving = false
+			velocity.x = 0
+			velocity.z = 0
+			_set_animation("idle")
+			move_and_slide()
+			sync_position.rpc(global_position, rotation.y)
+			return
+		
+		# Бежим
+		var move_dir = direction.normalized()
+		velocity.x = move_dir.x * speed
+		velocity.z = move_dir.z * speed
+		_set_animation("run")
 	else:
-		return from - min(step, -diff)
+		# Стоим
+		_set_animation("idle")
+		velocity.x = 0
+		velocity.z = 0
+	
+	move_and_slide()
+	sync_position.rpc(global_position, rotation.y)
 
 
+# =============================================================================
+#  6. АНИМАЦИИ
+# =============================================================================
 
+func _set_animation(anim_name: String):
+	if _last_anim != anim_name:
+		_last_anim = anim_name
+		sync_animation.rpc(anim_name)
+	if anim_manager:
+		match anim_name:
+			"idle": anim_manager.idle()
+			"run": anim_manager.run()
+
+
+# =============================================================================
+#  7. ВВОД
+# =============================================================================
+
+func _input(event):
+	if not _is_authority:
+		return
+	
+	var ui = get_tree().get_first_node_in_group("UI")
+	if ui and ui.visible:
+		return
+	
+	# ПКМ — движение
+	if event is InputEventMouseButton and event.button_index == MOUSE_BUTTON_RIGHT and event.pressed:
+		if not is_attacking:
+			move_to_click()
+	
+	# Клавиши скиллов
+	if event is InputEventKey and event.pressed and not event.is_echo():
+		var skill_id = 0
+		match event.keycode:
+			KEY_Q: skill_id = 1
+			KEY_W: skill_id = 2
+			KEY_E: skill_id = 3
+			KEY_R: skill_id = 4
+		
+		if skill_id > 0:
+			start_attack(skill_id)
+
+
+# =============================================================================
+#  8. АТАКА
+# =============================================================================
+
+func start_attack(skill_id: int):
+	var current_time = Time.get_ticks_msec() / 1000.0
+	
+	# Защита от спама
+	if current_time - _last_shot_time < _min_shot_interval:
+		return
+	if _attack_in_progress or is_attacking:
+		return
+	if not is_inside_tree():
+		return
+	
+	# Получаем скилл
+	var skill_instance = skills_library.get_skill_instance(skill_id)
+	if not skill_instance:
+		return
+	if not skill_instance.can_activate():
+		return
+	
+	# Начинаем
+	_last_shot_time = current_time
+	_attack_id += 1
+	var my_attack_id = _attack_id
+	
+	# Определяем цель и направление
+	var attack_data = _get_attack_direction(skill_instance)
+	attack_target = attack_data.target
+	
+	# Блокируем
+	_attack_in_progress = true
+	is_attacking = true
+	pending_skill_id = skill_id
+	
+	# Тратим ресурсы
+	_consume_mana(skill_instance)
+	_start_cooldown(skill_instance, skill_id)
+	
+	# Останавливаем движение
+	is_moving = false
+	velocity.x = 0
+	velocity.z = 0
+	
+	# Поворот
+	if attack_data.dir != Vector3.ZERO:
+		look_at(global_position + attack_data.dir, Vector3.UP)
+	
+	# Анимация
+	if anim_manager:
+		anim_manager.aim()
+	
+	# RPC
+	_send_attack_rpc(skill_id, attack_data)
+	
+	# Ждём Draw
+	await _wait_for_draw()
+	if not _validate_attack(my_attack_id):
+		return
+	
+	# Выстрел
+	if _is_authority:
+		if attack_data.dir != Vector3.ZERO:
+			look_at(global_position + attack_data.dir, Vector3.UP)
+		skill_instance._execute_with_direction(attack_data.dir, attack_data.target_pos, attack_data.is_targeted, attack_target)
+	
+	# Ждём Recoil
+	await _wait_for_recoil()
+	if not _validate_attack(my_attack_id):
+		return
+	
+	# Завершаем
+	_reset_attack_state()
+
+
+# ---------------------- Вспомогательные методы атаки ----------------------
+
+class AttackData:
+	var dir: Vector3 = Vector3.ZERO
+	var target_pos: Vector3 = Vector3.ZERO
+	var is_targeted: bool = false
+	var target: Node3D = null
+
+
+func _get_attack_direction(skill_instance) -> AttackData:
+	var data = AttackData.new()
+	
+	if skill_instance.skill_data.skill_type == "targeted" and skills_library.current_target and is_instance_valid(skills_library.current_target):
+		data.target = skills_library.current_target
+		data.dir = (data.target.global_position - global_position).normalized()
+		data.dir.y = 0
+		data.target_pos = data.target.global_position
+		data.is_targeted = true
+	else:
+		data.target = null
+		data.dir = skills_library.get_shoot_direction()
+		data.target_pos = global_position + data.dir * 10
+		data.is_targeted = false
+	
+	return data
+
+
+func _consume_mana(skill_instance):
+	current_mana -= skill_instance.skill_data.mana_cost
+	update_ui()
+
+
+func _start_cooldown(skill_instance, skill_id: int):
+	skill_instance.cooldown_timer = skill_instance.skill_data.cooldown
+	var ui = get_tree().get_first_node_in_group("SkillUI")
+	if ui:
+		ui.start_cooldown(skill_id)
+
+
+func _send_attack_rpc(skill_id: int, data: AttackData):
+	if data.target:
+		rpc("start_attack_rpc", skill_id, rotation.y, data.dir, data.target_pos, data.is_targeted, data.target.get_path())
+	else:
+		rpc("start_attack_rpc", skill_id, rotation.y, data.dir, data.target_pos, data.is_targeted, NodePath())
+
+
+func _wait_for_draw():
+	if anim_manager:
+		await anim_manager.animation_finished
+	else:
+		await get_tree().create_timer(0.3).timeout
+
+
+func _wait_for_recoil():
+	if anim_manager:
+		await anim_manager.recoil_finished
+	else:
+		await get_tree().create_timer(0.3).timeout
+
+
+func _validate_attack(my_attack_id: int) -> bool:
+	if my_attack_id != _attack_id:
+		return false
+	if not is_inside_tree():
+		_attack_in_progress = false
+		is_attacking = false
+		return false
+	return true
+
+
+func _reset_attack_state():
+	is_attacking = false
+	attack_target = null
+	pending_skill_id = 0
+	_attack_in_progress = false
+
+
+# =============================================================================
+#  9. RPC МЕТОДЫ
+# =============================================================================
+
+# ---------------------- Начало атаки (reliable) ----------------------
 @rpc("any_peer", "call_local", "reliable")
-func change_animation(anim):
-	anim_state.travel(anim)
+func start_attack_rpc(skill_id: int, rot: float, dir: Vector3, target_pos: Vector3, is_targeted: bool, target_path: NodePath):
+	if _is_authority:
+		return
+	
+	is_attacking = true
+	pending_skill_id = skill_id
+	rotation.y = rot
+	
+	_saved_dir = dir
+	_saved_target_pos = target_pos
+	_saved_is_targeted = is_targeted
+	
+	if not target_path.is_empty():
+		attack_target = get_node_or_null(target_path)
+	else:
+		attack_target = null
+	
+	if anim_manager:
+		anim_manager.aim()
+	
+	_play_attack_sequence(skill_id)
 
+
+func _play_attack_sequence(skill_id: int):
+	await _wait_for_draw()
+	
+	if not is_inside_tree():
+		is_attacking = false
+		return
+	
+	if _saved_dir != Vector3.ZERO:
+		look_at(global_position + _saved_dir, Vector3.UP)
+	
+	var skill_instance = skills_library.get_skill_instance(skill_id)
+	if skill_instance:
+		skill_instance._execute_with_direction(_saved_dir, _saved_target_pos, _saved_is_targeted, attack_target)
+	
+	await _wait_for_recoil()
+	
+	is_attacking = false
+	attack_target = null
+	pending_skill_id = 0
+
+
+# ---------------------- Позиция (unreliable — 60 раз/сек) ----------------------
 @rpc("any_peer", "unreliable", "call_local")
 func sync_position(new_pos: Vector3, new_rot: float):
-	if is_multiplayer_authority():
+	if _is_authority:
 		return
 	global_position = new_pos
 	rotation.y = new_rot
-	
 
+
+# ---------------------- Анимация (reliable — только при смене) ----------------------
+@rpc("any_peer", "reliable", "call_local")
+func sync_animation(anim_name: String):
+	if _is_authority:
+		return
+	if is_attacking:
+		return
+	if not anim_manager:
+		return
+	
+	match anim_name:
+		"idle": anim_manager.idle()
+		"run": anim_manager.run()
+		"attack": anim_manager.attack()
+		"aim": anim_manager.aim()
+		"hit": anim_manager.hit()
+		"die": anim_manager.die()
+
+
+# ---------------------- Смерть ----------------------
+@rpc("any_peer", "call_local", "reliable")
+func die_rpc():
+	if _is_authority:
+		return
+	queue_free()
+
+
+# =============================================================================
+# 10. КАМЕРА (_process)
+# =============================================================================
 
 func _process(delta):
-	if camera and is_multiplayer_authority():
+	if camera and _is_authority:
 		camera.global_position = global_position + Vector3(0, camera_height, camera_distance)
 		camera.look_at(global_position)

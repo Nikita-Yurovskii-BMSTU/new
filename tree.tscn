@@ -1,0 +1,8 @@
+[gd_scene format=3 uid="uid://dr8j82kcofho6"]
+
+[ext_resource type="ArrayMesh" uid="uid://cqd7hifyjelqm" path="res://assets/Stylized Nature MegaKit[Standard]/gays/CommonTree_1_tree_023.res" id="1_nnvrw"]
+
+[node name="Tree" type="Node3D" unique_id=326927643]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=1951031665]
+mesh = ExtResource("1_nnvrw")

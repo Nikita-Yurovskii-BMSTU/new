@@ -1,0 +1,11 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://bvi14x632jpcv"]
+
+[ext_resource type="Texture2D" uid="uid://dtcbxokfne2s1" path="res://assets/Pro Longbow Pack/Erika Archer With Bow Arrow_0.png" id="1_qgban"]
+
+[resource]
+resource_name = "phong1"
+transparency = 4
+vertex_color_use_as_albedo = true
+albedo_color = Color(0.9063318, 0.9063318, 0.9063318, 0.8)
+albedo_texture = ExtResource("1_qgban")
+emission_enabled = true

@@ -4,14 +4,34 @@ var bullet_scene: PackedScene = null
 var parent_player: Node = null
 var current_target: Node3D = null
 
+var all_skills: Dictionary = {}
+var equipped_skills: Array = [null, null, null, null]
+var skill_instances: Dictionary = {}
+
+signal skill_shot(skill_id: int, pos: Vector3, dir: Vector3, target_pos: Vector3, is_targeted: bool)
+
 
 func _ready():
-	pass
+	_load_all_skills()
+	_equip_default_skills()
+
+
+func _load_all_skills():
+	all_skills[1] = load("res://Skills/skill_piercing_arrow.tres")
+	all_skills[2] = load("res://Skills/skill_hail_arrows.tres")
+	all_skills[3] = load("res://Skills/skill_cone.tres")
+	all_skills[4] = load("res://Skills/skill_heal.tres")
+
+
+func _equip_default_skills():
+	equipped_skills[0] = 1  # Q
+	equipped_skills[1] = 2  # W
+	equipped_skills[2] = 3  # E
+	equipped_skills[3] = 4  # R
 
 
 func set_target(target: Node3D):
 	current_target = target
-	print("Skills: цель установлена - ", target.name if target else "null")
 
 
 func get_target() -> Node3D:
@@ -19,17 +39,51 @@ func get_target() -> Node3D:
 
 
 func get_skill_info(skill_id: int) -> Dictionary:
+	if not all_skills.has(skill_id):
+		return {"name": "Unknown", "mana": 0, "cooldown": 0, "type": "none"}
+	
+	var skill = all_skills[skill_id]
+	return {
+		"name": skill.skill_name,
+		"mana": skill.mana_cost,
+		"cooldown": skill.cooldown,
+		"type": skill.skill_type
+	}
+
+
+func get_equipped_skill(slot: int) -> int:
+	if slot >= 0 and slot < equipped_skills.size():
+		return equipped_skills[slot]
+	return 0
+
+
+func get_skill_instance(skill_id: int) -> SkillBase:
+	if skill_instances.has(skill_id):
+		return skill_instances[skill_id]
+	
+	if not all_skills.has(skill_id):
+		return null
+	
+	var skill_data = all_skills[skill_id]
+	var skill_instance: SkillBase
+	
 	match skill_id:
 		1:
-			return {"name": "Пронзающая стрела", "mana": 0, "cooldown": 0.5, "type": "target_or_skillshot"}
+			skill_instance = SkillPiercingArrow.new()
 		2:
-			return {"name": "Град стрел", "mana": 20, "cooldown": 2.0, "type": "aoe"}
+			skill_instance = SkillHailArrows.new()
 		3:
-			return {"name": "Конус", "mana": 30, "cooldown": 3.0, "type": "cone"}
+			skill_instance = SkillCone.new()
 		4:
-			return {"name": "Лечение", "mana": 40, "cooldown": 8.0, "type": "self"}
+			skill_instance = SkillHeal.new()
 		_:
-			return {"name": "Unknown", "mana": 0, "cooldown": 0, "type": "none"}
+			return null
+	
+	skill_instance.setup(skill_data, parent_player)
+	skill_instances[skill_id] = skill_instance
+	add_child(skill_instance)
+	
+	return skill_instance
 
 
 func get_shoot_direction() -> Vector3:
@@ -54,41 +108,17 @@ func get_shoot_direction() -> Vector3:
 	return Vector3.FORWARD
 
 
-func use_skill(skill_id: int):
+func execute_shoot(skill_id: int, target: Node3D = null):
 	if not parent_player:
 		return
 	
-	var skill_info = get_skill_info(skill_id)
-	
-	# Проверка маны
-	if parent_player.current_mana < skill_info["mana"]:
-		print("Недостаточно маны!")
-		return
-	
-	parent_player.current_mana -= skill_info["mana"]
-	parent_player.update_ui()
-	
-	var dir: Vector3
-	var target_pos: Vector3 = Vector3.ZERO
-	var is_targeted = false
-	
-	# Для Q (скилл 1) - проверяем таргет
-	if skill_id == 1 and current_target and is_instance_valid(current_target):
-		# Стрельба по цели
-		dir = (current_target.global_position - parent_player.global_position).normalized()
-		dir.y = 0
-		target_pos = current_target.global_position
-		is_targeted = true
-		print("Стрельба по цели: ", current_target.name)
-	else:
-		# Скиллшот в направлении мыши
-		dir = get_shoot_direction()
-		target_pos = parent_player.global_position + dir * 10
-		print("Скиллшот в направлении мыши")
-	
-	if dir != Vector3.ZERO:
-		parent_player.look_at(parent_player.global_position + dir, Vector3.UP)
-		pass
-	
-	# Отправляем RPC
-	parent_player.shoot_rpc.rpc(skill_id, parent_player.global_position + Vector3(0, 0.5, 0), dir, parent_player.rotation.y, target_pos, is_targeted)
+	var skill_instance = get_skill_instance(skill_id)
+	if skill_instance:
+		skill_instance.activate(target)
+
+
+func use_skill(slot: int):
+	if parent_player:
+		var skill_id = get_equipped_skill(slot)
+		if skill_id > 0:
+			parent_player.start_attack(skill_id)

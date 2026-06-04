@@ -8,11 +8,12 @@ extends Control
 @onready var skill3 = $SkillPanel/Skill3
 @onready var skill4 = $SkillPanel/Skill4
 
+# Кулдауны для каждого скилла
 var skill_cooldowns = {
-	1: 0.0,
-	2: 0.0,
-	3: 0.0,
-	4: 0.0,
+	1: {"current": 0.0, "max": 0.3},
+	2: {"current": 0.0, "max": 2.0},
+	3: {"current": 0.0, "max": 3.0},
+	4: {"current": 0.0, "max": 8.0},
 }
 
 var player: Node = null
@@ -36,6 +37,18 @@ func _ready():
 		mana_bar.value = 100
 
 
+func _process(delta):
+	# Обновляем кулдауны
+	for skill_id in skill_cooldowns:
+		if skill_cooldowns[skill_id]["current"] > 0:
+			skill_cooldowns[skill_id]["current"] -= delta
+			update_cooldown_display(skill_id)
+			
+			if skill_cooldowns[skill_id]["current"] <= 0:
+				skill_cooldowns[skill_id]["current"] = 0
+				update_cooldown_display(skill_id)
+
+
 func setup_ui_style():
 	if not skill_panel:
 		return
@@ -48,7 +61,8 @@ func setup_ui_style():
 	skill_panel.add_theme_stylebox_override("panel", panel_style)
 	
 	var buttons = [skill1, skill2, skill3, skill4]
-	for button in buttons:
+	for i in range(buttons.size()):
+		var button = buttons[i]
 		if not button:
 			continue
 		
@@ -68,7 +82,17 @@ func setup_ui_style():
 		hover_style.set_corner_radius_all(10)
 		button.add_theme_stylebox_override("hover", hover_style)
 		
+		var pressed_style = StyleBoxFlat.new()
+		pressed_style.bg_color = Color(0.15, 0.15, 0.2, 0.9)
+		pressed_style.set_border_width_all(2)
+		pressed_style.border_color = Color(1, 0.7, 0.3)
+		pressed_style.set_corner_radius_all(10)
+		button.add_theme_stylebox_override("pressed", pressed_style)
+		
 		button.add_theme_font_size_override("font_size", 20)
+		
+		# Устанавливаем текст кнопки
+		button.text = get_skill_default_text(i + 1)
 	
 	if health_bar:
 		var hp_style = StyleBoxFlat.new()
@@ -102,8 +126,8 @@ func setup_ui_style():
 
 
 func _on_skill_pressed(skill_id: int):
-	if skill_cooldowns[skill_id] > 0:
-		print("Скилл ", skill_id, " на перезарядке!")
+	if skill_cooldowns[skill_id]["current"] > 0:
+		print("Скилл ", skill_id, " на перезарядке! Осталось: ", ceil(skill_cooldowns[skill_id]["current"]))
 		return
 	
 	if not player:
@@ -112,24 +136,33 @@ func _on_skill_pressed(skill_id: int):
 			print("Игрок не найден!")
 			return
 	
-	# Вызываем скилл у игрока
-	if player.has_method("use_skill"):
+	if player.has_method("start_attack"):
+		player.start_attack(skill_id)
+	elif player.has_method("use_skill"):
 		player.use_skill(skill_id)
 
 
-func update_cooldown(skill_id: int, cooldown: float):
-	skill_cooldowns[skill_id] = cooldown
-	
+func start_cooldown(skill_id: int):
+	var cooldown_time = skill_cooldowns[skill_id]["max"]
+	skill_cooldowns[skill_id]["current"] = cooldown_time
+	update_cooldown_display(skill_id)
+
+
+func update_cooldown_display(skill_id: int):
 	var button = get_skill_button(skill_id)
 	if not button:
 		return
 	
-	if cooldown > 0:
-		button.text = str(int(cooldown) + 1)
+	var cd = skill_cooldowns[skill_id]["current"]
+	
+	if cd > 0:
+		button.text = str(ceil(cd))
 		button.disabled = true
+		button.modulate = Color(0.5, 0.5, 0.5, 1)
 	else:
 		button.text = get_skill_default_text(skill_id)
 		button.disabled = false
+		button.modulate = Color(1, 1, 1, 1)
 
 
 func get_skill_default_text(skill_id: int) -> String:
@@ -154,11 +187,20 @@ func update_health(value: float, max_value: float):
 	if health_bar:
 		health_bar.value = value
 		health_bar.max_value = max_value
-#		health_bar.text = str(int(value)) + " / " + str(int(max_value))
 
 
 func update_mana(value: float, max_value: float):
 	if mana_bar:
 		mana_bar.value = value
 		mana_bar.max_value = max_value
-		#mana_bar.text = str(int(value)) + " / " + str(int(max_value))
+
+
+func update_cooldowns_from_skills(skills_library):
+	# Синхронизация кулдаунов с реальными данными скиллов
+	if not skills_library:
+		return
+	
+	for skill_id in [1, 2, 3, 4]:
+		var skill_instance = skills_library.get_skill_instance(skill_id)
+		if skill_instance and skill_instance.skill_data:
+			skill_cooldowns[skill_id]["max"] = skill_instance.skill_data.cooldown

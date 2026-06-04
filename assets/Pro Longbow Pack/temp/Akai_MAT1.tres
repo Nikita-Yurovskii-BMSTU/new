@@ -1,0 +1,13 @@
+[gd_resource type="StandardMaterial3D" format=3 uid="uid://dk42qr8kuemp3"]
+
+[ext_resource type="Texture2D" uid="uid://cl4qbd0j4inea" path="res://assets/Pro Longbow Pack/Erika Archer With Bow Arrow_7.png" id="1_xd7r3"]
+[ext_resource type="Texture2D" uid="uid://ctnym36etfwu1" path="res://assets/Pro Longbow Pack/Erika Archer With Bow Arrow_8.png" id="2_t83no"]
+
+[resource]
+resource_name = "Akai_MAT1"
+vertex_color_use_as_albedo = true
+albedo_texture = ExtResource("1_xd7r3")
+emission_enabled = true
+normal_enabled = true
+normal_scale = 0.0
+normal_texture = ExtResource("2_t83no")

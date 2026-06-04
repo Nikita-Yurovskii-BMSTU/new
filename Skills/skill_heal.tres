@@ -1,0 +1,19 @@
+[gd_resource type="Resource" script_class="SkillResource" format=3 uid="uid://skill4"]
+
+[ext_resource type="Script" uid="uid://dof1nhm42jsyf" path="res://Skills/SkillResource.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+id = 4
+skill_name = "Лечение"
+description = "Восстанавливает 30 здоровья"
+mana_cost = 5
+cooldown = 8.0
+skill_type = "self"
+damage = 0
+speed = 0.0
+lifetime = 0.0
+key_binding = "R"
+projectile_count = 0
+heal_amount = 30
+metadata/_custom_type_script = "uid://dof1nhm42jsyf"

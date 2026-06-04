@@ -1,15 +1,15 @@
 [gd_scene format=3 uid="uid://ytqex3xk0l0x"]
 
 [ext_resource type="Script" uid="uid://vsyl7bkw03j1" path="res://bullet.gd" id="1_v7oki"]
+[ext_resource type="PackedScene" uid="uid://c4jq7s82wru52" path="res://assets/BinbunVFX_Vol2/ElementalMagicFX/effects/projectile/vfx_fire_projectile_01.tscn" id="2_v8qja"]
 
 [sub_resource type="CylinderShape3D" id="CylinderShape3D_v7oki"]
 height = 7.2177734
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_v8qja"]
-albedo_color = Color(0, 18.892157, 18.892157, 1)
-
-[sub_resource type="SphereMesh" id="SphereMesh_t4vbm"]
-material = SubResource("StandardMaterial3D_v8qja")
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_v8qja"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
 
 [node name="Bullet" type="Area3D" unique_id=8659254]
 script = ExtResource("1_v7oki")
@@ -17,8 +17,19 @@ script = ExtResource("1_v7oki")
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=498014495]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.7163086, 0)
 shape = SubResource("CylinderShape3D_v7oki")
+debug_fill = false
 
-[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=2070559937]
-mesh = SubResource("SphereMesh_t4vbm")
+[node name="VFXFireProjectile_01" parent="." unique_id=1245201508 instance=ExtResource("2_v8qja")]
+transform = Transform3D(-2.1855695e-07, 0, 0.5, 0, 0.5, 0, -5, 0, -2.1855694e-08, 0, 0, 0)
+primary_color = Color(0.97219425, 0.63600004, 0.94052833, 1)
+secondary_color = Color(0.3413166, 0, 0.17773724, 1)
+tertiary_color = Color(0.22307059, 0, 0.06422028, 1)
+color_curve = 4.0
+noise_scroll = Vector2(0, 1)
+spiral_amount = 0.3
+spiral_noise = 0.4
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="." unique_id=1990443482]
+replication_config = SubResource("SceneReplicationConfig_v8qja")
 
 [connection signal="body_entered" from="." to="." method="_on_body_entered"]

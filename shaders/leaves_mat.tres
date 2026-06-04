@@ -1,0 +1,11 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://brt2llyvu5a5y"]
+
+[ext_resource type="Shader" uid="uid://ium15xp2g88j" path="res://shaders/leaves_mat.gdshader" id="1_raari"]
+[ext_resource type="Texture2D" uid="uid://dffhu2go7winq" path="res://assets/Stylized Nature MegaKit[Standard]/glTF/Leaves_NormalTree_C.png" id="2_i8xpd"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_raari")
+shader_parameter/leaf_texture = ExtResource("2_i8xpd")
+shader_parameter/wind_speed = 1.0
+shader_parameter/wind_strength = 0.05

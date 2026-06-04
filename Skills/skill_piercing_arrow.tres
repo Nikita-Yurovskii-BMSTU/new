@@ -1,0 +1,17 @@
+[gd_resource type="Resource" script_class="SkillResource" format=3 uid="uid://skill1"]
+
+[ext_resource type="Script" uid="uid://dof1nhm42jsyf" path="res://Skills/SkillResource.gd" id="1"]
+[ext_resource type="PackedScene" uid="uid://ytqex3xk0l0x" path="res://bullet.tscn" id="1_85g6d"]
+[ext_resource type="Texture2D" uid="uid://bifg1wwfyk4i6" path="res://icon.svg" id="2_8xdaa"]
+
+[resource]
+script = ExtResource("1")
+id = 1
+skill_name = "Пронзающая стрела"
+description = "Выстрел стрелой, которая летит в цель или по прямой"
+cooldown = 0.4
+skill_type = "targeted"
+effect_scene = ExtResource("1_85g6d")
+icon = ExtResource("2_8xdaa")
+key_binding = "Q"
+metadata/_custom_type_script = "uid://dof1nhm42jsyf"
